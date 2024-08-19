@@ -3,7 +3,7 @@
     npm install
 - Create .env File, Add a .env file in the root directory with:
     MONGO_URI=mongodb://localhost:27017/gym_management
-    PORT=3000
+    PORT=8080
 - Compile TypeScript:
     npm run build
 - Start the Server:
