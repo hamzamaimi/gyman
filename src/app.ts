@@ -1,19 +1,25 @@
-import * as dotenv from 'dotenv';
 import express from 'express';
 import connectDB from './config/db';
 import tenants from './config/tenants';
+import path from 'path';
+
+const dotenv = require('dotenv');
 //Load .env configurations
-dotenv.config();
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 const app = express();
 const port = process.env.PORT;
 
 // Middleware
 app.use((req, res, next) => {
-    const host : string | undefined = req.headers.host;
+    //Get domain, remove port if present and remove www. if present
+    const host: string = req.headers.host || '';
+    // Remove the 'www.' prefix and extract the base domain
+    const baseHost = host.split(':')[0].replace(/^www\./, '');
+
     //define the tenant according to the hostname
-    if(host != undefined && tenants[host]){
-        res.locals.tenant = tenants[host];
+    if(baseHost && tenants[baseHost]){
+        res.locals.tenant = tenants[baseHost];
         connectDB(res.locals.tenant);
     }else{
         res.locals.tenant = 'unknown';
