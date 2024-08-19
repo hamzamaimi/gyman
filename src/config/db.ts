@@ -17,9 +17,9 @@ const connectDB = async (tenant:string) => {
       }).asPromise();
 
       dbCache[dbName] = connection;
-      console.log('Connected to database: '+ dbName);
+      console.log('First connection sucessfully made with database: '+ dbName);
     } catch (err) {
-      console.error('MongoDB connection error:', err);
+      console.error('MongoDB connection error:'+ err);
       throw err;
     }
   }
