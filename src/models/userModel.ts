@@ -57,7 +57,6 @@ const UserSchema: Schema<IUser> = new Schema({
         required: true,
         enum: tenantsList
     }
-
 }, {timestamps: true});
 
 //Create and export the User model
