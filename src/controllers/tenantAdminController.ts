@@ -1,34 +1,28 @@
 import { Request, Response } from "express";
 
-/**
- * @description
- * A tenantAdmin user can register a gym member that is going to receive an email with a link
- * that redirect to a page when he set a password and activate his account 
- */
-export const registerGymMember = async (req:Request, res:Response) => {
-    const {name, lastname, email, password, sendEmail} = req.body;
+export const editMemberPersonalInfo = (req:Request, res:Response) => {
+
+}
+
+export const editMemberPaymentInfo = (req:Request, res:Response) => {
+
+}
+
+
+export const deleteMember = (req:Request, res:Response) => {
+
+}
+
+export const getAllMembers = (req:Request, res:Response) => {
+
 }
 
 /**
- * @description
- * edit gym member personal info
+ * @param req.body.memberId
+ * Contains the id of the user to send the message to.
+ * @param req.body.message
+ * Contains the message that we have to send to the user.
  */
-
-/**
- * @description
- * edit gym member payment info
- */
-
-/**
- * @description
- * delete gym member
- */
-
-/**
- * @description
- * send comunication to a gym member
- */
-
-/**
- * get all gym members
- */
+export const sendComunication = (req:Request, res:Response) => {
+    const {memberId, message} = req.body;
+}
