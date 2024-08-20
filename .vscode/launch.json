@@ -6,7 +6,7 @@
       "request": "launch",
       "name": "Launch Program",
       "runtimeExecutable": "ts-node",
-      "program": "${workspaceFolder}/src/app.ts",
+      "program": "${workspaceFolder}/src/server.ts",
       "preLaunchTask": "tsc: build - tsconfig.json",
       "outFiles": ["${workspaceFolder}/out/**/*.js"],
       "console": "integratedTerminal",

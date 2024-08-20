@@ -17,7 +17,7 @@
   },
   "scripts": {
     "build": "tsc",
-    "start": "node out/app.js",
-    "dev": "nodemon src/app.ts"
+    "start": "node out/server.js",
+    "dev": "nodemon src/server.ts"
   }
 }

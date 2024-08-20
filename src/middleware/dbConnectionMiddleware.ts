@@ -12,7 +12,6 @@ const dbMiddleware = async (req: Request, res: Response, next: NextFunction) => 
         res.locals.tenant = tenantsDictionary[baseHost];
         try {
             await connectDB(res.locals.tenant);
-            console.log(`Connected to database for tenant: ${res.locals.tenant}`);
         } catch (err) {
             console.error(`Error connecting to database for tenant ${res.locals.tenant}:`, err);
             res.status(500).send('Database connection error');
