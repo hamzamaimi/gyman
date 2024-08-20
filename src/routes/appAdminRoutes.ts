@@ -3,9 +3,8 @@ import { Router } from "express";
 const router = Router();
 
 /**
- * @description
- * Each route point to it's controller
- */
-// router.post('/registerUser', registerUser);
+ * @todo
+ * implement app-admin routes
+*/
 
 export default router;
