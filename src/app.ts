@@ -4,12 +4,14 @@ import authRoutes from './routes/authRoutes';
 import appAdminRoutes from './routes/appAdminRoutes';
 import memberRoutes from './routes/memberRoutes';
 import tenantAdminRoutes from './routes/tenantAdminRoutes';
+import cookiesMiddleware from './middleware/cookiesMiddleware';
 
 const app = express();
 
 // Middleware
 app.use(dbConnectionMiddleware);
 app.use(express.json());
+app.use(cookiesMiddleware);
 
 //Routes
 app.use('/auth', authRoutes);
