@@ -28,7 +28,7 @@ export const registerUser = async (req:Request, res:Response) => {
     try{
         const password = generateRandomPassword();
         const hashedPassword = await bcrypt.hash(password, 10);
-        const user: IUser = createNewUser(name, lastname, email, tenant, roleForNewUser, hashedPassword);
+        const user: IUser = await createNewUser(name, lastname, email, tenant, roleForNewUser, hashedPassword);
         if(sendEmail) sendRegistrationEmail(user);
         res.status(201).send();
     }catch(err){

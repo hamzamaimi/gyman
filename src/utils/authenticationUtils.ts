@@ -27,7 +27,7 @@ export const validateRegistrationData = (name: string, lastname:string, email:st
     }
     if(!isValidEmail(email)){
         errors.push('The email format is not valid.')
-    }else(!isAvailableEmail(email)){
+    }else if(!isAvailableEmail(email)){
         errors.push('The email is already taken.')
     }
     
@@ -54,8 +54,8 @@ const isAvailableEmail = (email:string): boolean => {
     return false
 }
 
-export const createNewUser = (name: string, lastname: string, email: string, tenant: string,
-    roleForNewUser: string, hashedPassword: string): UserDocument => {
+export const createNewUser = async (name: string, lastname: string, email: string, tenant: string,
+    roleForNewUser: string, hashedPassword: string): Promise<UserDocument> => {
     try{
         let user;
         switch(roleForNewUser){
