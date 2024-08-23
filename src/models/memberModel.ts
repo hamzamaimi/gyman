@@ -1,5 +1,5 @@
-import mongoose, {Schema} from "mongoose";
-import { IUser } from "./userModel";
+import mongoose, {Model, Schema} from "mongoose";
+import { IUser, UserDocument } from "./userModel";
 
 /**
  * @todo
@@ -9,10 +9,13 @@ export interface IMember extends IUser{
     active: boolean;
 }
 
+export interface MemberDocument extends UserDocument {};
+
 const MemberSchema : Schema<IMember> = new Schema({
     active: {
         type: Boolean
     }
 });
 
-export default mongoose.model<IMember>('Member', MemberSchema);
+const MemberModel:Model<IMember> = mongoose.model<IMember>('Member', MemberSchema);
+export default MemberModel;

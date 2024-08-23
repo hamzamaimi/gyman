@@ -1,9 +1,11 @@
-import mongoose, {Schema} from "mongoose";
-import { IUser } from "./userModel";
+import mongoose, {Model, Schema} from "mongoose";
+import { IUser, UserDocument } from "./userModel";
 
 export interface ITenantAdmin extends IUser {
     blocked: boolean;
 }
+
+export interface TenantDocument extends UserDocument {};
 
 const TenantAdminSchema : Schema<ITenantAdmin> = new Schema({
     blocked: {
@@ -11,4 +13,5 @@ const TenantAdminSchema : Schema<ITenantAdmin> = new Schema({
     }
 });
 
-export default mongoose.model<ITenantAdmin>('TenantAdmin', TenantAdminSchema);
+const TenantAdminModel: Model<ITenantAdmin> =  mongoose.model<ITenantAdmin>('TenantAdmin', TenantAdminSchema);
+export default TenantAdminModel;

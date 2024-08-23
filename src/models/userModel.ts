@@ -1,6 +1,6 @@
-import mongoose, {Document, Schema} from "mongoose";
-import {ROLES, GENDERS} from '../constants/userConstants';
-import { tenantsList } from "../constants/tenantCosntants";
+import mongoose, {Document, Model, Schema} from "mongoose";
+import {USER_ROLES, GENDERS} from '../constants/userConstants';
+import { TENANTS_LIST } from "../constants/tenantCosntants";
 
 export interface IUser extends Document{
     firstName: string;
@@ -13,6 +13,8 @@ export interface IUser extends Document{
     role: string;
     tenant: string;
 }
+
+export interface UserDocument extends IUser, Document {}
 
 const UserSchema: Schema<IUser> = new Schema({
     firstName: {
@@ -50,14 +52,16 @@ const UserSchema: Schema<IUser> = new Schema({
     role: {
         type: String,
         required: true,
-        enum: ROLES
+        enum: USER_ROLES
     },
     tenant: {
         type: String,
         required: true,
-        enum: tenantsList
+        enum: TENANTS_LIST
     }
 }, {timestamps: true});
 
 //Create and export the User model
-export default mongoose.model<IUser>('User', UserSchema);
+const User: Model<IUser> = mongoose.model<IUser>('User', UserSchema);
+
+export default User;

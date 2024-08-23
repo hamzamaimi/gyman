@@ -2,14 +2,12 @@ interface ITenants {
     [hostname: string] : string;
 }
 
-const tenantsDictionary: ITenants = {
+export const TENANTS_DICTIONARY: ITenants = {
     'ringadoragyman.com' : 'ringadora',
     'palestragyman.com' : 'palestra',
 };
-export {tenantsDictionary};
 
-const tenantsList : string[] = [
+export const TENANTS_LIST : string[] = [
     'ringadora',
     'palestra'
 ]
-export {tenantsList};
