@@ -79,3 +79,10 @@ export const createNewUser = (name: string, lastname: string, email: string, ten
         throw new Error(USER_CREATION_ERROR);
     }
 }
+
+/**
+ * @todo
+ */
+export const sendRegistrationEmail = (user: IUser) => {
+    
+}
