@@ -11,7 +11,7 @@ export interface IMember extends IUser{
 
 export interface MemberDocument extends UserDocument {};
 
-const MemberSchema : Schema<IMember> = new Schema({
+export const MemberSchema : Schema<IMember> = new Schema({
     active: {
         type: Boolean
     }

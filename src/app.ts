@@ -4,7 +4,7 @@ import authRoutes from './routes/authRoutes';
 import appAdminRoutes from './routes/appAdminRoutes';
 import memberRoutes from './routes/memberRoutes';
 import tenantAdminRoutes from './routes/tenantAdminRoutes';
-import cookiesMiddleware from './middleware/cookiesMiddleware';
+import cookiesMiddleware from './middleware/processCookiesMiddleware';
 
 const app = express();
 

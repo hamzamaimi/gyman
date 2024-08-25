@@ -7,11 +7,11 @@ export interface ITenantAdmin extends IUser {
 
 export interface TenantDocument extends UserDocument {};
 
-const TenantAdminSchema : Schema<ITenantAdmin> = new Schema({
+export const TenantAdminSchema : Schema<ITenantAdmin> = new Schema({
     blocked: {
         type: Boolean
     }
 });
 
-const TenantAdminModel: Model<ITenantAdmin> =  mongoose.model<ITenantAdmin>('TenantAdmin', TenantAdminSchema);
+const TenantAdminModel: Model<ITenantAdmin> = mongoose.model<ITenantAdmin>('TenantAdmin', TenantAdminSchema);
 export default TenantAdminModel;

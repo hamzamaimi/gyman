@@ -1,7 +1,7 @@
 import * as dotenv from 'dotenv';
 dotenv.config();
 
-import AppAdmin, { AppAdminSchema } from '../models/appAdminModel';
+import { AppAdminSchema } from '../models/appAdminModel';
 import { APP_ADMIN_ROLE } from '../constants/userConstants';
 import { ADMIN_USER_CREATED } from '../constants/sucessConstants';
 import { USER_CREATION_ERROR } from '../constants/errorsConstants';
@@ -14,11 +14,10 @@ const initAppAdminUser = async (dbConnection: Connection) => {
     try{
         const appAdminModel = dbConnection.model('AppAdmin', AppAdminSchema);
         const existingAdmin = await appAdminModel.findOne({ email: adminEmail }).exec();
-        if (existingAdmin) {
-            return;
-        }else{
-            console.log('here');
+        if (existingAdmin){ 
+            return; 
         }
+        
         const appAdminUser = new appAdminModel({
             firstName: 'admin',
             lastName: 'user',
