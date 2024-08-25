@@ -42,29 +42,30 @@ export const registerUser = async (req:Request, res:Response) => {
  * after 4 failed attempt block the account. 
 */
 export const login = async (req:Request, res:Response) => {
-    const {email, password} = req.body;
-    /**
-     * @todo 
-     * remove the undefined and get the user from the database
-     */
-    const user : IUser | undefined = undefined; 
-    if(user == null){
-        return res.status(400).send('Cannot find user');
-    }
-    try{
-        /**
-         * @todo
-         * compare the received password with the hashed password in the db
-         * remove all the inline strings and put them in a separate resources file
-         */
-        if(await bcrypt.compare(password, "user.password")){
-            res.send('logged in')
-        }else{
-            res.send('Email or password does not match');
-        }
-    }catch{
-        res.status(500).send('Email or password does not match');
-    }
+    res.send('executed!')
+    // const {email, password} = req.body;
+    // /**
+    //  * @todo 
+    //  * remove the undefined and get the user from the database
+    //  */
+    // const user : IUser | undefined = undefined; 
+    // if(user == null){
+    //     return res.status(400).send('Cannot find user');
+    // }
+    // try{
+    //     /**
+    //      * @todo
+    //      * compare the received password with the hashed password in the db
+    //      * remove all the inline strings and put them in a separate resources file
+    //      */
+    //     if(await bcrypt.compare(password, "user.password")){
+    //         res.send('logged in')
+    //     }else{
+    //         res.send('Email or password does not match');
+    //     }
+    // }catch{
+    //     res.status(500).send('Email or password does not match');
+    // }
 }
 
 /**

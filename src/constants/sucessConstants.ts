@@ -1,0 +1,1 @@
+export const ADMIN_USER_CREATED = 'Admin user created successfully.';

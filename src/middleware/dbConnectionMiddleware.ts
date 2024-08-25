@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import connectDB from '../config/db';
-import {TENANTS_DICTIONARY} from '../constants/tenantCosntants';
+import {TENANTS_DICTIONARY} from '../constants/tenantConstants';
+import initAppAdminUser from '../scripts/initAppAdminUser';
+import { DB_CONNECTION_ERROR } from '../constants/errorsConstants';
 
 /**
  * @description
@@ -16,8 +18,17 @@ const dbMiddleware = async (req: Request, res: Response, next: NextFunction) => 
     if (baseHost && TENANTS_DICTIONARY[baseHost]) {
         res.locals.tenant = TENANTS_DICTIONARY[baseHost];
         try {
-            await connectDB(res.locals.tenant);
-        } catch (err) {
+            await connectDB(res.locals.tenant)
+                .then((result) => {
+                    res.locals.dataBaseConnection = result;
+                    if(result){
+                        initAppAdminUser(result);
+                    }else{
+                        console.error(DB_CONNECTION_ERROR);
+                        throw new Error();
+                    }
+                })
+        }catch (err) {
             console.error(`Error connecting to database for tenant ${res.locals.tenant}:`, err);
             res.status(500).send('Database connection error');
             return;

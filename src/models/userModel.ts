@@ -1,6 +1,6 @@
 import mongoose, {Document, Model, Schema} from "mongoose";
 import {USER_ROLES, GENDERS} from '../constants/userConstants';
-import { TENANTS_LIST } from "../constants/tenantCosntants";
+import { TENANTS_LIST } from "../constants/tenantConstants";
 
 export interface IUser extends Document{
     firstName: string;
@@ -16,7 +16,7 @@ export interface IUser extends Document{
 
 export interface UserDocument extends IUser, Document {}
 
-const UserSchema: Schema<IUser> = new Schema({
+export const UserSchema: Schema<IUser> = new Schema({
     firstName: {
         type: String,
         required: true,
@@ -56,7 +56,6 @@ const UserSchema: Schema<IUser> = new Schema({
     },
     tenant: {
         type: String,
-        required: true,
         enum: TENANTS_LIST
     }
 }, {timestamps: true});

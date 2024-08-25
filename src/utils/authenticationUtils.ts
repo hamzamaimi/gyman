@@ -1,5 +1,5 @@
 import { ROLE_NOT_FOUND, USER_CREATION_ERROR } from "../constants/errorsConstants";
-import { TENANTS_LIST } from "../constants/tenantCosntants";
+import { TENANTS_LIST } from "../constants/tenantConstants";
 import { APP_ADMIN_ROLE, MEMBER_ROLE, TENANT_ADMIN_ROLE } from "../constants/userConstants";
 import AdminModel from "../models/appAdminModel";
 import MemberModel from "../models/memberModel";
