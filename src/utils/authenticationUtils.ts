@@ -1,3 +1,4 @@
+import { Connection } from "mongoose";
 import { ROLE_NOT_FOUND, USER_CREATION_ERROR } from "../constants/errorsConstants";
 import { TENANTS_LIST } from "../constants/tenantConstants";
 import { APP_ADMIN_ROLE, MEMBER_ROLE, TENANT_ADMIN_ROLE } from "../constants/userConstants";
@@ -51,11 +52,11 @@ const isValidTenant = (tenant: string): boolean => TENANTS_LIST.includes(tenant)
  * TO IMPLEMENT!
  */
 const isAvailableEmail = (email:string): boolean => {
-    return false
+    return true
 }
 
 export const createNewUser = async (name: string, lastname: string, email: string, tenant: string,
-    roleForNewUser: string, hashedPassword: string): Promise<UserDocument> => {
+    roleForNewUser: string, hashedPassword: string, dbConnection: Connection): Promise<UserDocument> => {
     try{
         let user;
         switch(roleForNewUser){

@@ -1,9 +1,16 @@
-import { JWT_TOKEN } from "../constants/cookiesConstants"
-import { ROLE_NOT_FOUND } from "../constants/errorsConstants";
-import { APP_ADMIN_ROLE, MEMBER_ROLE, TENANT_ADMIN_ROLE, USER_ROLES } from "../constants/userConstants";
-import User, { UserDocument } from "../models/userModel";
+import { JWT } from "../constants/cookiesConstants"
+import { QUERY_EXECUTION_ERROR, ROLE_NOT_FOUND } from "../constants/errorsConstants";
+import { APP_ADMIN_ROLE, MEMBER_ROLE, TENANT_ADMIN_ROLE } from "../constants/userConstants";
+import { IUser } from "../models/userModel";
+import * as dotenv from 'dotenv';
+import jwt, { JwtPayload } from 'jsonwebtoken';
+import { Connection } from "mongoose";
+import { AppAdminSchema } from "../models/appAdminModel";
+import { TenantAdminSchema } from "../models/tenantAdminModel";
+import { MemberSchema } from "../models/memberModel";
+import { APP_ADMIN_MODEL_NAME, TENANT_ADMIN_MODEL_NAME, MEMBER_MODEL_NAME } from "../constants/dbConstants";
 
-const jwt = require('jsonwebtoken');
+dotenv.config();
 
 /**
  * @param cookies
@@ -11,16 +18,19 @@ const jwt = require('jsonwebtoken');
  * @todo
  * put the secret in the .env file
  */
-export const getUserByToken = async (cookies: Record<string, any>): Promise<UserDocument | null>  => {
-    const jwtToken = cookies[JWT_TOKEN];
-    const jwtSecret = process.env.JWT_SECRET;
+export const getUserByToken = async (cookies: Record<string, any>, dbConnection: Connection): Promise<IUser | null>   => {
+    const jwtToken = cookies[JWT];
+    const jwtSecret = process.env.ACCESS_TOKEN_SECRET || '';
 
     // Verify and decode the token
     const decoded = jwt.verify(jwtToken, jwtSecret);
+    const payload = decoded as JwtPayload;
 
     // Extract user ID from the decoded token
-    const userId = decoded.sub;
-    return await User.findById(userId).exec();
+    const userEmail = payload.email;
+
+    const user: IUser | null = await findUserByEmail(dbConnection, userEmail);
+    return user;
 }
 
 export const getRoleForNewUser = (currentUserRole : string) : string => {
@@ -31,4 +41,35 @@ export const getRoleForNewUser = (currentUserRole : string) : string => {
         return MEMBER_ROLE;
     }
     throw new Error(ROLE_NOT_FOUND);
+}
+
+/**
+ * @param dbConnection
+ * Database connection.
+ * @param email 
+ * The email of the user to find.
+ * @returns 
+ * A user object if the user exists or null.
+ */
+export async function findUserByEmail(dbConnection: Connection, email: String): Promise<IUser | null> {
+    const { appAdminModel, tenantAdminModel, memberModel } = getUserModels(dbConnection);
+    let user: IUser|null = null;
+    try {
+        user = await appAdminModel.findOne({ email: email }).exec();
+        if (user) return user;
+        user = await tenantAdminModel.findOne({ email: email }).exec();
+        if (user) return user;
+        user = await memberModel.findOne({ email: email }).exec();
+    } catch (err) {
+        console.error(QUERY_EXECUTION_ERROR, err);
+        throw new Error(QUERY_EXECUTION_ERROR + " " + err);
+    }
+    return user;
+}
+
+function getUserModels(dbConnection: Connection){
+    const appAdminModel = dbConnection.model(APP_ADMIN_MODEL_NAME, AppAdminSchema);
+    const tenantAdminModel = dbConnection.model(TENANT_ADMIN_MODEL_NAME, TenantAdminSchema);
+    const memberModel = dbConnection.model(MEMBER_MODEL_NAME, MemberSchema);
+    return { appAdminModel, tenantAdminModel, memberModel };
 }

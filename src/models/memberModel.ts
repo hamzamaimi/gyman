@@ -1,5 +1,6 @@
 import mongoose, {Model, Schema} from "mongoose";
 import { IUser, UserDocument } from "./userModel";
+import { MEMBER_MODEL_NAME } from "../constants/dbConstants";
 
 /**
  * @todo
@@ -17,5 +18,5 @@ export const MemberSchema : Schema<IMember> = new Schema({
     }
 });
 
-const MemberModel:Model<IMember> = mongoose.model<IMember>('Member', MemberSchema);
+const MemberModel:Model<IMember> = mongoose.model<IMember>(MEMBER_MODEL_NAME, MemberSchema);
 export default MemberModel;

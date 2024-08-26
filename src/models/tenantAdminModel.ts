@@ -1,5 +1,6 @@
 import mongoose, {Model, Schema} from "mongoose";
 import { IUser, UserDocument } from "./userModel";
+import { TENANT_ADMIN_MODEL_NAME } from "../constants/dbConstants";
 
 export interface ITenantAdmin extends IUser {
     blocked: boolean;
@@ -13,5 +14,5 @@ export const TenantAdminSchema : Schema<ITenantAdmin> = new Schema({
     }
 });
 
-const TenantAdminModel: Model<ITenantAdmin> = mongoose.model<ITenantAdmin>('TenantAdmin', TenantAdminSchema);
+const TenantAdminModel: Model<ITenantAdmin> = mongoose.model<ITenantAdmin>(TENANT_ADMIN_MODEL_NAME, TenantAdminSchema);
 export default TenantAdminModel;

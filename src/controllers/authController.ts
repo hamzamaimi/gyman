@@ -1,16 +1,14 @@
 import { Request, Response } from "express";
 import * as bcrypt from 'bcrypt';
 import { createNewUser, generateRandomPassword, sendRegistrationEmail, validateRegistrationData } from "../utils/authenticationUtils";
-import { IUser, UserSchema } from "../models/userModel";
-import { getRoleForNewUser, getUserByToken } from "../utils/userUtils";
-import { ENV_CONSTANT_ERROR, QUERY_EXECUTION_ERROR, USER_NULL, WRONG_CREDENTIALS_ERROR } from "../constants/errorsConstants";
-import { Connection, Model } from "mongoose";
+import { IUser } from "../models/userModel";
+import { findUserByEmail, getRoleForNewUser, getUserByToken } from "../utils/userUtils";
+import { ENV_CONSTANT_ERROR, USER_NULL, WRONG_CREDENTIALS_ERROR } from "../constants/errorsConstants";
+import { Connection } from "mongoose";
 import jwt from 'jsonwebtoken';
 import * as dotenv from 'dotenv';
-import { AppAdminSchema } from "../models/appAdminModel";
-import { TenantAdminSchema } from "../models/tenantAdminModel";
-import { MemberSchema } from "../models/memberModel";
 import { LOGIN_SUCCESSFUL } from "../constants/sucessConstants";
+import { JWT } from "../constants/cookiesConstants";
 
 dotenv.config();
 
@@ -25,12 +23,13 @@ dotenv.config();
 */
 export const registerUser = async (req:Request, res:Response) => {
     const {name, lastname, email, sendEmail, tenant} = req.body;
+    const dbConnection = res.locals.dataBaseConnection;
 
     const errorsInInputData: string[] = validateRegistrationData(name, lastname, email, tenant);
     if (errorsInInputData.length > 0) {
         return res.status(400).json({ errors: errorsInInputData });
     }
-    const currentUser = await getUserByToken(req.cookies);
+    const currentUser = await getUserByToken(req.cookies, dbConnection);
     if(currentUser == null){
         throw new Error(USER_NULL)
     }
@@ -38,7 +37,8 @@ export const registerUser = async (req:Request, res:Response) => {
     try{
         const password = generateRandomPassword();
         const hashedPassword = await bcrypt.hash(password, 10);
-        const user: IUser = await createNewUser(name, lastname, email, tenant, roleForNewUser, hashedPassword);
+        const user: IUser = await createNewUser(name, lastname, email, 
+            tenant, roleForNewUser, hashedPassword, dbConnection);
         if(sendEmail) sendRegistrationEmail(user);
         res.status(201).send();
     }catch(err){
@@ -79,7 +79,7 @@ export const login = async (req:Request, res:Response) => {
  * The request response.
  */
 function setJwtHttpOnlyCookie(accessToken: string, res: Response) {
-    res.cookie('token', accessToken, {
+    res.cookie(JWT, accessToken, {
         httpOnly: true, // Ensures the cookie is sent only over HTTP(S), not client-side JS
         secure: process.env.NODE_ENV === 'production', // Ensures the cookie is sent only over HTTPS in production
         sameSite: 'strict', // Controls whether a cookie is sent with cross-site requests; use 'lax' or 'strict'
@@ -101,32 +101,6 @@ function generateJwt(user: IUser): string{
     }
     const accessToken = jwt.sign(user.toJSON(), tokenSecret, { expiresIn: '30d' });
     return accessToken;
-}
-
-/**
- * @param dbConnection
- * Database connection.
- * @param email 
- * The email of the user to find.
- * @returns 
- * A user object if the user exists or null.
- */
-async function findUserByEmail(dbConnection: Connection, email: String) {
-    const appAdminModel = dbConnection.model('AppAdmin', AppAdminSchema);
-    const tenantAdminModel = dbConnection.model('TenantAdmin', TenantAdminSchema);
-    const memberModel = dbConnection.model('Member', MemberSchema);
-    let user: IUser | null = null;
-    try {
-        user = await tenantAdminModel.findOne({ email }).exec();
-        if (user) return user;
-        user = await memberModel.findOne({ email }).exec();
-        if (user) return user;
-        user = await appAdminModel.findOne({ email: email }).exec();
-    } catch (err) {
-        console.error(QUERY_EXECUTION_ERROR, err);
-        throw new Error(QUERY_EXECUTION_ERROR + " " + err);
-    }
-    return user;
 }
 
 /**
