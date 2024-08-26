@@ -8,3 +8,4 @@ export const TOKEN_ERROR = 'Error in the provided token.';
 export const TOKEN_NOT_FOUND = 'Token not found.'
 export const WRONG_CREDENTIALS_ERROR = 'Email or password does not match.';
 export const MODEL_NOT_FOUND_ERROR = 'Mongoose model not found.';
+export const REGISTRATION_ERROR = 'Error during registration.'

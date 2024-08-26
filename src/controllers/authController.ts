@@ -1,13 +1,13 @@
 import { Request, Response } from "express";
 import * as bcrypt from 'bcrypt';
-import { createNewUser, generateRandomPassword, sendRegistrationEmail, validateRegistrationData } from "../utils/authenticationUtils";
+import { generateRandomPassword, sendRegistrationEmail, validateRegistrationData } from "../utils/authenticationUtils";
 import { IUser } from "../models/userModel";
-import { findUserByEmail, getRoleForNewUser, getUserByToken } from "../utils/userUtils";
-import { ENV_CONSTANT_ERROR, USER_NULL, WRONG_CREDENTIALS_ERROR } from "../constants/errorsConstants";
+import { findUserByEmail, getRoleForNewUser, getUserByToken, createNewUser } from "../utils/userUtils";
+import { ENV_CONSTANT_ERROR, REGISTRATION_ERROR, USER_NULL, WRONG_CREDENTIALS_ERROR } from "../constants/errorsConstants";
 import { Connection } from "mongoose";
 import jwt from 'jsonwebtoken';
 import * as dotenv from 'dotenv';
-import { LOGIN_SUCCESSFUL } from "../constants/sucessConstants";
+import { LOGIN_SUCCESSFUL, TENANT_ADMIN_CREATED } from "../constants/sucessConstants";
 import { JWT } from "../constants/cookiesConstants";
 
 dotenv.config();
@@ -40,10 +40,10 @@ export const registerUser = async (req:Request, res:Response) => {
         const user: IUser = await createNewUser(name, lastname, email, 
             tenant, roleForNewUser, hashedPassword, dbConnection);
         if(sendEmail) sendRegistrationEmail(user);
-        res.status(201).send();
+        res.status(201).send(TENANT_ADMIN_CREATED);
     }catch(err){
-        console.error('Error during registration: '+ err);
-        res.status(500).send();
+        console.error(`${REGISTRATION_ERROR} \n ${err}`);
+        res.status(500).send(REGISTRATION_ERROR);
     }
 }
 

@@ -1,7 +1,7 @@
 import { JWT } from "../constants/cookiesConstants"
-import { QUERY_EXECUTION_ERROR, ROLE_NOT_FOUND } from "../constants/errorsConstants";
+import { QUERY_EXECUTION_ERROR, ROLE_NOT_FOUND, USER_CREATION_ERROR } from "../constants/errorsConstants";
 import { APP_ADMIN_ROLE, MEMBER_ROLE, TENANT_ADMIN_ROLE } from "../constants/userConstants";
-import { IUser } from "../models/userModel";
+import { IUser, UserDocument } from "../models/userModel";
 import * as dotenv from 'dotenv';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import { Connection } from "mongoose";
@@ -72,4 +72,30 @@ function getUserModels(dbConnection: Connection){
     const tenantAdminModel = dbConnection.model(TENANT_ADMIN_MODEL_NAME, TenantAdminSchema);
     const memberModel = dbConnection.model(MEMBER_MODEL_NAME, MemberSchema);
     return { appAdminModel, tenantAdminModel, memberModel };
+}
+
+export const createNewUser = async (name: string, lastname: string, email: string, tenant: string,
+    roleForNewUser: string, hashedPassword: string, dbConnection: Connection): Promise<UserDocument> => {
+    const { appAdminModel, tenantAdminModel, memberModel } = getUserModels(dbConnection);
+    
+    try{
+        let user;
+        switch(roleForNewUser){
+            case TENANT_ADMIN_ROLE:
+                user = new tenantAdminModel({firstName: name, lastName: lastname, email: email,
+                    tenant: tenant, role: roleForNewUser, password: hashedPassword, blocked: false})
+                await user.save();
+                break;  
+            case MEMBER_ROLE:
+                user = new memberModel({ firstName: name, lastName: lastname, email: email,
+                    tenant: tenant, role: roleForNewUser, password: hashedPassword})
+                break;
+            default:
+                throw new Error(ROLE_NOT_FOUND);
+        }
+        return user;
+    }catch(err){
+        console.log(err);
+        throw new Error(`${USER_CREATION_ERROR}: ${err}`);
+    }
 }
