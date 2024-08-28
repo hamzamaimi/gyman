@@ -1,19 +1,22 @@
-import * as dotenv from 'dotenv';
 import express from 'express';
-import connectDB from './config/db';
-
-dotenv.config();
+import dbConnectionMiddleware from './middleware/dbConnectionMiddleware';
+import authRoutes from './routes/authRoutes';
+import appAdminRoutes from './routes/appAdminRoutes';
+import memberRoutes from './routes/memberRoutes';
+import tenantAdminRoutes from './routes/tenantAdminRoutes';
+import cookiesMiddleware from './middleware/processCookiesMiddleware';
 
 const app = express();
-const port = process.env.PORT || 3000;
-
-// Connect to MongoDB
-connectDB();
 
 // Middleware
+app.use(dbConnectionMiddleware);
 app.use(express.json());
+app.use(cookiesMiddleware);
 
-// Start server
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
-});
+//Routes
+app.use('/auth', authRoutes);
+app.use('/appAdmin', appAdminRoutes);
+app.use('/member', memberRoutes);
+app.use('/tenantAdmin', tenantAdminRoutes);
+
+export default app;
