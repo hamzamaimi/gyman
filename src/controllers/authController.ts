@@ -2,8 +2,8 @@ import { Request, Response } from "express";
 import * as bcrypt from 'bcrypt';
 import { generateRandomPassword, sendRegistrationEmail, validateRegistrationData } from "../utils/authenticationUtils";
 import { IUser } from "../models/userModel";
-import { findUserByEmail, getRoleForNewUser, getUserByToken, createNewUser } from "../utils/userUtils";
-import { ENV_CONSTANT_ERROR, REGISTRATION_ERROR, USER_NULL, WRONG_CREDENTIALS_ERROR } from "../constants/errorsConstants";
+import * as UserUtils from "../utils/userUtils";
+import * as Errors from "../constants/errorsConstants";
 import { Connection } from "mongoose";
 import jwt from 'jsonwebtoken';
 import * as dotenv from 'dotenv';
@@ -29,21 +29,21 @@ export const registerUser = async (req:Request, res:Response) => {
     if (errorsInInputData.length > 0) {
         return res.status(400).json({ errors: errorsInInputData });
     }
-    const currentUser = await getUserByToken(req.cookies, dbConnection);
+    const currentUser = await UserUtils.getUserByToken(req.cookies, dbConnection);
     if(currentUser == null){
-        throw new Error(USER_NULL)
+        throw new Error(Errors.USER_NULL)
     }
-    const roleForNewUser: string = getRoleForNewUser(currentUser.role);
+    const roleForNewUser: string = UserUtils.getRoleForNewUser(currentUser.role);
     try{
         const password = generateRandomPassword();
         const hashedPassword = await bcrypt.hash(password, 10);
-        const user: IUser = await createNewUser(name, lastname, email, 
+        const user: IUser = await UserUtils.createNewUser(name, lastname, email, 
             tenant, roleForNewUser, hashedPassword, dbConnection);
         if(sendEmail) sendRegistrationEmail(user);
         res.status(201).send(TENANT_ADMIN_CREATED);
     }catch(err){
-        console.error(`${REGISTRATION_ERROR} \n ${err}`);
-        res.status(500).send(REGISTRATION_ERROR);
+        console.error(`${Errors.REGISTRATION_ERROR} \n ${err}`);
+        res.status(500).send(Errors.REGISTRATION_ERROR);
     }
 }
 
@@ -55,17 +55,29 @@ export const login = async (req:Request, res:Response) => {
     const {email, password} = req.body;
     const dbConnection: Connection = res.locals.dataBaseConnection;
 
-    let user: IUser | null = await findUserByEmail(dbConnection, email);
+    let user: IUser | null = await UserUtils.findUserByEmail(dbConnection, email);
     if(user == null){
-        return res.status(400).send(WRONG_CREDENTIALS_ERROR);
+        return res.status(401).send(Errors.WRONG_CREDENTIALS_ERROR);
     }
+    if(user.blocked){
+        return res.status(403).send(Errors.ACCOUNT_BLOCKED);
+    }
+
     try{
         //Compare the text plain password with the incrypted one stored in the database.
-        //If the comparison is fine 
-        await bcrypt.compare(password, user.password).then(() => {
+        await bcrypt.compare(password, user.password).then((result) => {
+            if(!result){
+                UserUtils.increaseWrongAttemptsField(user);
+                if(user.wrongAttempts > 3){
+                    UserUtils.blockAccountAndSendEmail(user, dbConnection);
+                    return res.status(401).send(Errors.ACCOUNT_HAS_BEEN_BLOCKED);
+                }
+                console.error(Errors.PASSWORD_NOT_MATCH);
+                return res.status(401).send(Errors.WRONG_CREDENTIALS_ERROR);
+            }
             const accessToken = generateJwt(user);
             setJwtHttpOnlyCookie(accessToken, res);
-            res.send(LOGIN_SUCCESSFUL);
+            res.status(201).send(LOGIN_SUCCESSFUL);
         })
     }catch(err){
         console.error(err);
@@ -76,7 +88,7 @@ export const login = async (req:Request, res:Response) => {
  * @param accessToken
  * Token to put in the HttpOnly cookie.
  * @param res
- * The request response.
+ * Http respose.
  */
 function setJwtHttpOnlyCookie(accessToken: string, res: Response) {
     res.cookie(JWT, accessToken, {
@@ -96,8 +108,8 @@ function setJwtHttpOnlyCookie(accessToken: string, res: Response) {
 function generateJwt(user: IUser): string{
     const tokenSecret = process.env.ACCESS_TOKEN_SECRET;
     if (!tokenSecret) {
-        console.log(ENV_CONSTANT_ERROR);
-        throw new Error(ENV_CONSTANT_ERROR);
+        console.log(Errors.ENV_CONSTANT_ERROR);
+        throw new Error(Errors.ENV_CONSTANT_ERROR);
     }
     const accessToken = jwt.sign(user.toJSON(), tokenSecret, { expiresIn: '30d' });
     return accessToken;

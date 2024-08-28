@@ -99,3 +99,39 @@ export const createNewUser = async (name: string, lastname: string, email: strin
         throw new Error(`${USER_CREATION_ERROR}: ${err}`);
     }
 }
+
+export const increaseWrongAttemptsField = async (user: IUser) => {
+    try {
+        const wrongAttempts: number = user.wrongAttempts + 1;
+        user.wrongAttempts = wrongAttempts;
+        await user.save(); 
+    } catch (err) {
+        console.error(`${QUERY_EXECUTION_ERROR} \n ${err}`);
+        throw new Error(`${QUERY_EXECUTION_ERROR} \n ${err}`);
+    }
+}
+
+/**
+ * @todo
+ * send Email
+ */
+export const blockAccountAndSendEmail = async (user: IUser, dbConnection: Connection) => {
+    try{
+        user.blocked = true;
+        await user.save();
+        //sendEmail(user)
+    } catch (err) {
+        console.error(`${QUERY_EXECUTION_ERROR} \n ${err}`);
+        throw new Error(`${QUERY_EXECUTION_ERROR} \n ${err}`);
+    }
+}
+
+const resetWrongAttemptsField = async (user: IUser, dbConnection: Connection) => {
+    try{
+        user.wrongAttempts = 0;
+        await user.save();
+    } catch (err) {
+        console.error(`${QUERY_EXECUTION_ERROR} \n ${err}`);
+        throw new Error(`${QUERY_EXECUTION_ERROR} \n ${err}`);
+    }
+}

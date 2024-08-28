@@ -12,6 +12,8 @@ export interface IUser extends Document{
     password: string;
     role: string;
     tenant: string;
+    blocked: Boolean;
+    wrongAttempts: number;
 }
 
 export interface UserDocument extends IUser, Document {}
@@ -57,6 +59,14 @@ export const UserSchema: Schema<IUser> = new Schema({
     tenant: {
         type: String,
         enum: TENANTS_LIST
+    },
+    blocked: {
+        type: Boolean,
+        default: false
+    },
+    wrongAttempts: {
+        type: Number,
+        default: 0
     }
 }, {timestamps: true});
 
