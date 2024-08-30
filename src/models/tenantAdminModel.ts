@@ -3,9 +3,7 @@ import { IUser, UserDocument, UserSchema } from "./userModel";
 import { TENANT_ADMIN_MODEL_NAME } from "../constants/dbConstants";
 import { AppAdminSchema } from "./appAdminModel";
 
-export interface ITenantAdmin extends IUser {
-    blocked: boolean;
-}
+export interface ITenantAdmin extends IUser {}
 
 export interface TenantDocument extends UserDocument {};
 /**
@@ -13,12 +11,7 @@ export interface TenantDocument extends UserDocument {};
  * how did I concatenate an object using this syntax?
  * ...UserSchema.obj as Schema<ITenantAdmin>,
  */
-export const TenantAdminSchema : Schema<ITenantAdmin> = new Schema({
-    ...UserSchema.obj as Schema<ITenantAdmin>,
-    blocked: {
-        type: Boolean
-    }
-}, {timestamps: true});
+export const TenantAdminSchema : Schema<ITenantAdmin> = new Schema(UserSchema.obj, {timestamps: true});
 
 const TenantAdminModel: Model<ITenantAdmin> = mongoose.model<ITenantAdmin>(TENANT_ADMIN_MODEL_NAME, TenantAdminSchema);
 export default TenantAdminModel;

@@ -1,6 +1,6 @@
 import mongoose, {Document, Model, Schema} from "mongoose";
 import {USER_ROLES, GENDERS} from '../constants/userConstants';
-import { TENANTS_LIST } from "../constants/tenantConstants";
+import {TENANTS_LIST} from "../constants/tenantConstants";
 
 export interface IUser extends Document{
     firstName: string;
@@ -14,6 +14,8 @@ export interface IUser extends Document{
     tenant: string;
     blocked: Boolean;
     wrongAttempts: number;
+    isMemberShipActive: Boolean;
+    isAccountConfirmed: Boolean;
 }
 
 export interface UserDocument extends IUser, Document {}
@@ -67,6 +69,14 @@ export const UserSchema: Schema<IUser> = new Schema({
     wrongAttempts: {
         type: Number,
         default: 0
+    },
+    isMemberShipActive: {
+        type: Boolean,
+        default: false
+    },
+    isAccountConfirmed: {
+        type: Boolean,
+        default: false
     }
 }, {timestamps: true});
 

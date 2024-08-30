@@ -15,8 +15,6 @@ dotenv.config();
 /**
  * @param cookies
  * Contains the application cookies, make sure that the jwtToken is in there.
- * @todo
- * put the secret in the .env file
  */
 export const getUserByToken = async (cookies: Record<string, any>, dbConnection: Connection): Promise<IUser | null>   => {
     const jwtToken = cookies[JWT];
@@ -124,6 +122,13 @@ export const blockAccountAndSendEmail = async (user: IUser, dbConnection: Connec
         console.error(`${QUERY_EXECUTION_ERROR} \n ${err}`);
         throw new Error(`${QUERY_EXECUTION_ERROR} \n ${err}`);
     }
+}
+
+/**
+ * @todo
+ */
+export const activateAccount = () => {
+
 }
 
 const resetWrongAttemptsField = async (user: IUser, dbConnection: Connection) => {
