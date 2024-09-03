@@ -15,7 +15,8 @@ export interface IUser extends Document{
     blocked: Boolean;
     wrongAttempts: number;
     isMemberShipActive: Boolean;
-    isAccountConfirmed: Boolean;
+    isAccountActive: Boolean;
+    passwordResetRequestedAt: Date;
 }
 
 export interface UserDocument extends IUser, Document {}
@@ -74,9 +75,12 @@ export const UserSchema: Schema<IUser> = new Schema({
         type: Boolean,
         default: false
     },
-    isAccountConfirmed: {
+    isAccountActive: {
         type: Boolean,
         default: false
+    },
+    passwordResetRequestedAt:{
+        type: Date
     }
 }, {timestamps: true});
 

@@ -1,5 +1,5 @@
+import { Response } from "express";
 import { TENANTS_LIST } from "../constants/tenantConstants";
-import { IUser } from "../models/userModel";
 const crypto = require('crypto');
 /**
  * @param length 
@@ -10,6 +10,20 @@ const crypto = require('crypto');
 export const generateRandomPassword = (length = 12) => {
     return crypto.randomBytes(length).toString('base64').slice(0, length);
 }
+
+export const isPasswordSecure = (password: string): boolean => {
+    // Regular expression to check for at least one uppercase letter and one special character
+    const hasUppercase = /[A-Z]/;
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/;
+  
+    // Check if password meets all the conditions
+    return (
+      typeof(password) == 'string' &&
+      password.length >= 8 && // At least 8 characters
+      hasUppercase.test(password) && // Contains at least one uppercase letter
+      hasSpecialChar.test(password) // Contains at least one special character
+    );
+  } 
 
 export const validateRegistrationData = (name: string, lastname:string, email:string, tenant:string) => {
     const errors: string[] = [];
@@ -49,9 +63,3 @@ const isAvailableEmail = (email:string): boolean => {
     return true
 }
 
-/**
- * @todo
- */
-export const sendRegistrationEmail = (user: IUser) => {
-    
-}
