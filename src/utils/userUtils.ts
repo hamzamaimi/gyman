@@ -35,7 +35,14 @@ export const getUserByToken = async (cookies: Record<string, any>, dbConnection:
     const user: IUser | null = await getUserByEmail(dbConnection, userEmail);
     return user;
 }
-
+/**
+ * 
+ * @param currentUserRole 
+ * The role of the current user that wants to create a new user.
+ * @returns 
+ * Returns a user role, if the current user has the app-admin role he can create a tenant-admin role users.
+ * If the current user has tenant-admin role he can create member role users.
+ */
 export const getRoleForNewUser = (currentUserRole : string) : string => {
     if(currentUserRole == APP_ADMIN_ROLE){
         return TENANT_ADMIN_ROLE;
@@ -69,7 +76,10 @@ export async function getUserByEmail(dbConnection: Connection, email: String): P
     }
     return user;
 }
-
+/**
+ * @returns 
+ * All the user models.
+ */
 function getUserModels(dbConnection: Connection){
     const appAdminModel = dbConnection.model(APP_ADMIN_MODEL_NAME, AppAdminSchema);
     const tenantAdminModel = dbConnection.model(TENANT_ADMIN_MODEL_NAME, TenantAdminSchema);

@@ -10,7 +10,14 @@ const crypto = require('crypto');
 export const generateRandomPassword = (length = 12) => {
     return crypto.randomBytes(length).toString('base64').slice(0, length);
 }
-
+/**
+ * @param password 
+ * The password to check
+ * @description
+ * A password to be secure should be at least 8 characters, one uppercase and one special character.
+ * @returns 
+ * A boolean that indicate if the password is secure or not.
+ */
 export const isPasswordSecure = (password: string): boolean => {
     // Regular expression to check for at least one uppercase letter and one special character
     const hasUppercase = /[A-Z]/;
