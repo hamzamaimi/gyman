@@ -11,11 +11,16 @@ export interface IUser extends Document{
     birthDay: Date;
     password: string;
     role: string;
+    //Rappresents the tenant of the user
     tenant: string;
+    //If true means that the user has been blocked cause of many wrong login attempts
     blocked: Boolean;
+    //Number of wrong attempts in row, after a successful login it will be reset to 0
     wrongAttempts: number;
-    isMemberShipActive: Boolean;
+    //When is it false the user can only do the login
+    //In order to activate the account and use the whole app the user has to change the password.
     isAccountActive: Boolean;
+    //The date time field that contains the last time the user requests a password reset
     passwordResetRequestedAt: Date;
 }
 
@@ -70,10 +75,6 @@ export const UserSchema: Schema<IUser> = new Schema({
     wrongAttempts: {
         type: Number,
         default: 0
-    },
-    isMemberShipActive: {
-        type: Boolean,
-        default: false
     },
     isAccountActive: {
         type: Boolean,
