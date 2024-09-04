@@ -135,7 +135,14 @@ function generateJwt(user: IUser): string{
         console.log(Errors.ENV_CONSTANT_ERROR);
         throw new Error(Errors.ENV_CONSTANT_ERROR);
     }
-    const accessToken = jwt.sign(user.toJSON(), tokenSecret, { expiresIn: '30d' });
+    const userPayload = {
+        "_id" : user.id,
+        "name" : user.firstName,
+        "lastName" : user.lastName,
+        "email" : user.email,
+        "tenant" : user.tenant
+    }
+    const accessToken = jwt.sign(userPayload, tokenSecret, { expiresIn: '30d' });
     return accessToken;
 }
 
