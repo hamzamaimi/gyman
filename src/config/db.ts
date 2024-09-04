@@ -8,7 +8,7 @@ dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 const connectionCache: { [key: string]: Connection } = {};
 
 /**
- * @param tenant 
+ * @param databaseName 
  * Tenant name used to connect to it's database.
  * @description
  * Create a connection to the database if it doesn't exist, 
@@ -16,8 +16,8 @@ const connectionCache: { [key: string]: Connection } = {};
  * @returns
  * Mongoose connection to the tenant database.
  */
-const connectDB = async (tenant:string) => {
-  const dbName:string = 'gyman_' + tenant;
+const connectDB = async (databaseName:string) => {
+  const dbName:string = 'gyman_' + databaseName;
   const uri: string = process.env.MONGO_URI || '';
 
   if(connectionCache[dbName]){
