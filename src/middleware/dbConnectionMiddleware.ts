@@ -13,15 +13,14 @@ import { DB_CONNECTION_ERROR } from '../constants/errorsConstants';
  */
 const dbMiddleware = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        await connectDB(res.locals.tenant).then((result) => {
-            res.locals.dataBaseConnection = result;
-            if(result){
-                initAppAdminUser(result);
-            }else{
-                console.error(DB_CONNECTION_ERROR);
-                throw new Error(DB_CONNECTION_ERROR);
-            }
-        })
+        const dbConnection = await connectDB(res.locals.tenant);
+        if(dbConnection){
+            res.locals.dataBaseConnection = dbConnection;
+            initAppAdminUser(dbConnection);
+        }else{
+            console.error(DB_CONNECTION_ERROR);
+            throw new Error(DB_CONNECTION_ERROR);
+        }
     }catch (err) {
         console.error(`Error connecting to database for tenant ${res.locals.tenant}:`, err);
         res.status(500).send('Database connection error');

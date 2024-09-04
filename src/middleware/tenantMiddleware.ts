@@ -54,12 +54,18 @@ const identifyTenant = async (dbConnection: Connection, req: Request, res: Respo
 
 const tenantMiddleware = async (req: Request, res: Response, next: NextFunction) => {
     try{
-        await connectDB('administration').then((dbConnection) => {
-            if(dbConnection){
-                initializeTenantsCollection(dbConnection);
-                identifyTenant(dbConnection, req, res);
-            }
-        })
+        const dbConnection = await connectDB('administration');
+        if(dbConnection){
+            await initializeTenantsCollection(dbConnection);
+            await identifyTenant(dbConnection, req, res);
+        }
+        
+        // await connectDB('administration').then((dbConnection) => {
+        //     if(dbConnection){
+        //         initializeTenantsCollection(dbConnection);
+        //         identifyTenant(dbConnection, req, res);
+        //     }
+        // })
     }catch (err){
         console.error(DB_CONNECTION_ERROR);
         throw new Error(DB_CONNECTION_ERROR);

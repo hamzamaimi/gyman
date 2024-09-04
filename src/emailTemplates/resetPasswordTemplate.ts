@@ -1,8 +1,5 @@
 import { capitalizeFirstLetter } from "../utils/stringUtils"
-/**
- * @todo
- * 
- */
+
 export let RESET_PASSWORD_TEMPLATE = (tenantName: string, userName: string, email: string, textPlainPassword: string) => {
 return `<!DOCTYPE html>
     <html lang="it">

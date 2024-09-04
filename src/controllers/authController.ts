@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import * as bcrypt from 'bcrypt';
-import { generateRandomPassword, isPasswordSecure, validateRegistrationData } from "../utils/authenticationUtils";
+import * as AuthUtils from "../utils/authenticationUtils";
 import { sendRegistrationEmail } from "../utils/sendEmailUtills";
 import { IUser } from "../models/userModel";
 import * as UserUtils from "../utils/userUtils";
@@ -8,7 +8,7 @@ import * as Errors from "../constants/errorsConstants";
 import { Connection } from "mongoose";
 import jwt from 'jsonwebtoken';
 import * as dotenv from 'dotenv';
-import { LOGIN_SUCCESSFUL, PASSWORD_CORRECTLY_CHANGED, RESET_PASSWORD_SUCCESSFUL, USER_CREATED } from "../constants/sucessConstants";
+import * as SucessConstants from "../constants/sucessConstants";
 import { JWT } from "../constants/cookiesConstants";
 
 dotenv.config();
@@ -19,29 +19,31 @@ dotenv.config();
  * a user with a 'tenant-admin' role can create only users users with 'member' role.
  * @param req.body.sendEmail 
  * Boolean flag, if true send confirmation email with the user data and a temporary generated password to access the app.
- * @todo
- * send email for account confirmation
 */
 export const registerUser = async (req:Request, res:Response) => {
     const {name, lastname, email, sendEmail, tenant} = req.body;
     const dbConnection = res.locals.dataBaseConnection;
 
-    const errorsInInputData: string[] = validateRegistrationData(name, lastname, email, tenant);
+    const errorsInInputData: string[] = await AuthUtils.validateRegistrationData(name, lastname, email, dbConnection);
     if (errorsInInputData.length > 0) {
         return res.status(400).json({ errors: errorsInInputData });
     }
+
     const currentUser = await UserUtils.getUserByToken(req.cookies, dbConnection);
     if(currentUser == null){
         throw new Error(Errors.USER_NULL)
     }
-    const roleForNewUser: string = UserUtils.getRoleForNewUser(currentUser.role);
+    const tenantForNewUser = AuthUtils.getTenantForNewUser(currentUser, tenant);
+    const roleForNewUser: string = AuthUtils.getRoleForNewUser(currentUser.role);
     try{
-        const password = generateRandomPassword();
+        const password = AuthUtils.generateRandomPassword();
         const hashedPassword = await bcrypt.hash(password, 10);
         const user: IUser = await UserUtils.createNewUser(name, lastname, email, 
-            tenant, roleForNewUser, hashedPassword, dbConnection);
-        if(sendEmail) sendRegistrationEmail(user, res, password);
-        res.status(201).send(USER_CREATED);
+            tenantForNewUser, roleForNewUser, hashedPassword, dbConnection);
+        if(sendEmail){ 
+            sendRegistrationEmail(user, res, password);
+        }
+        res.status(201).send(SucessConstants.USER_CREATED);
     }catch(err){
         console.error(`${Errors.REGISTRATION_ERROR} \n ${err}`);
         res.status(500).send(Errors.REGISTRATION_ERROR);
@@ -76,7 +78,7 @@ export const login = async (req:Request, res:Response) => {
             const accessToken = generateJwt(user);
             setJwtHttpOnlyCookie(accessToken, res);
             UserUtils.resetWrongAttemptsField(user);
-            res.status(201).send(LOGIN_SUCCESSFUL);
+            res.status(201).send(SucessConstants.LOGIN_SUCCESSFUL);
         })
     }catch(err){
         console.error(err);
@@ -91,7 +93,7 @@ export const login = async (req:Request, res:Response) => {
  */
 export const changePassword = async (req: Request, res: Response) => {
     const {password} = req.body;
-    if(!isPasswordSecure(password)){
+    if(!AuthUtils.isPasswordSecure(password)){
         return res.status(400).send(Errors.PASSWORD_NOT_SECURE);
     }
     const dbConnection = res.locals.dataBaseConnection;
@@ -103,7 +105,7 @@ export const changePassword = async (req: Request, res: Response) => {
     currentUser.password = await bcrypt.hash(password, 10);
     currentUser.isAccountActive = true;
     currentUser.save();
-    return res.status(200).send(PASSWORD_CORRECTLY_CHANGED);
+    return res.status(200).send(SucessConstants.PASSWORD_CORRECTLY_CHANGED);
 }
 
 /**
@@ -149,7 +151,7 @@ export const resetPassword = async (req:Request, res:Response) => {
     const dbConnection: Connection = res.locals.dataBaseConnection;
     const user: IUser|null = await UserUtils.getUserByEmail(dbConnection, email);
     if(!user){
-        res.status(201).send(RESET_PASSWORD_SUCCESSFUL);
+        res.status(201).send(SucessConstants.RESET_PASSWORD_SUCCESSFUL);
         console.error(`Error in resetPassword function: ${Errors.USER_NULL} ${email}`);
         return;
     }
