@@ -3,6 +3,7 @@ import dbConnectionMiddleware from './middleware/dbConnectionMiddleware';
 import authRoutes from './routes/authRoutes';
 import appAdminRoutes from './routes/appAdminRoutes';
 import memberRoutes from './routes/memberRoutes';
+import tenantRoutes from './routes/tenantRoutes';
 import tenantAdminRoutes from './routes/tenantAdminRoutes';
 import cookiesMiddleware from './middleware/processCookiesMiddleware';
 import tenantMiddleware from './middleware/tenantMiddleware';
@@ -16,9 +17,10 @@ app.use(express.json());
 app.use(cookiesMiddleware);
 
 //Routes
-app.use('/auth', authRoutes);
-app.use('/appAdmin', appAdminRoutes);
-app.use('/member', memberRoutes);
-app.use('/tenantAdmin', tenantAdminRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/appAdmin', appAdminRoutes);
+app.use('/api/member', memberRoutes);
+app.use('/api/tenantAdmin', tenantAdminRoutes);
+app.use('/api/tenant', tenantRoutes);
 
 export default app;

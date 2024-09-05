@@ -3,6 +3,7 @@ import mongoose, { model, Model, Schema } from "mongoose";
 export interface ITenant extends Document {
     domain: string;
     name: string;
+    base64Logo: string;
 }
 
 export interface TenantDocument extends ITenant, Document {}
@@ -16,6 +17,9 @@ export const TenantSchema = new Schema<ITenant>({
     name: {
         type: String,
         required: true
+    },
+    base64Logo:{
+        type: String
     }
 }, {timestamps: true});
 

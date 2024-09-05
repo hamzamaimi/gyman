@@ -59,13 +59,6 @@ const tenantMiddleware = async (req: Request, res: Response, next: NextFunction)
             await initializeTenantsCollection(dbConnection);
             await identifyTenant(dbConnection, req, res);
         }
-        
-        // await connectDB('administration').then((dbConnection) => {
-        //     if(dbConnection){
-        //         initializeTenantsCollection(dbConnection);
-        //         identifyTenant(dbConnection, req, res);
-        //     }
-        // })
     }catch (err){
         console.error(DB_CONNECTION_ERROR);
         throw new Error(DB_CONNECTION_ERROR);
