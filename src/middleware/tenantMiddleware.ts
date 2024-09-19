@@ -51,18 +51,22 @@ const identifyTenant = async (dbConnection: Connection, req: Request, res: Respo
     }
   
 }
-
+/**
+ * @todo
+ * Remove commet and remove instruction that set the tenant in the response 
+ */
 const tenantMiddleware = async (req: Request, res: Response, next: NextFunction) => {
-    try{
-        const dbConnection = await connectDB('administration');
-        if(dbConnection){
-            await initializeTenantsCollection(dbConnection);
-            await identifyTenant(dbConnection, req, res);
-        }
-    }catch (err){
-        console.error(DB_CONNECTION_ERROR);
-        throw new Error(DB_CONNECTION_ERROR);
-    }
+    // try{
+    //     const dbConnection = await connectDB('administration');
+    //     if(dbConnection){
+    //         await initializeTenantsCollection(dbConnection);
+    //         await identifyTenant(dbConnection, req, res);
+    //     }
+    // }catch (err){
+    //     console.error(DB_CONNECTION_ERROR);
+    //     throw new Error(DB_CONNECTION_ERROR);
+    // }
+    res.locals.tenant = 'ringadora';
     next();
 }
 
