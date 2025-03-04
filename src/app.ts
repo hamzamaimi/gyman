@@ -7,6 +7,7 @@ import tenantRoutes from './routes/tenantRoutes';
 import tenantAdminRoutes from './routes/tenantAdminRoutes';
 import cookiesMiddleware from './middleware/processCookiesMiddleware';
 import tenantMiddleware from './middleware/tenantMiddleware';
+import cors from 'cors';
 
 const app = express();
 
@@ -17,6 +18,15 @@ app.use(express.json());
 app.use(cookiesMiddleware);
 
 //Routes
+/**
+ * @todo
+ * set the CORS for the production environment
+ */
+app.use(cors({
+    origin: 'http://192.168.1.18:5173',    
+    methods: 'GET,POST,PUT,DELETE',   // Specify allowed HTTP methods,
+    credentials: true //Allow credentials (cookies) to be sent
+}));
 app.use('/api/auth', authRoutes);
 app.use('/api/appAdmin', appAdminRoutes);
 app.use('/api/member', memberRoutes);
