@@ -78,13 +78,25 @@ export const login = async (req:Request, res:Response) => {
             const accessToken = generateJwt(user);
             setJwtHttpOnlyCookie(accessToken, res);
             UserUtils.resetWrongAttemptsField(user);
-            res.status(201).send(SucessConstants.LOGIN_SUCCESSFUL);
+            res.status(201).send(createJsonForLocalStorage(user));
         })
     }catch(err){
         console.error(err);
         return res.status(500).send();
     }
 }
+
+const createJsonForLocalStorage = (user: IUser) : Object => {
+    const tokenExpirationDate: Date = new Date();
+    tokenExpirationDate.setDate(tokenExpirationDate.getDate() + 29); 
+    return {
+        "tokenExpirationDate": tokenExpirationDate,
+        "userRole": user.role,
+        "firstName": user.firstName,
+        "isAccountActive": user.isAccountActive
+    }
+}
+
 /**
  * @description
  * The user create a new password for it's account.
