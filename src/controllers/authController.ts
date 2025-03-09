@@ -1,13 +1,14 @@
 import { Request, Response } from "express";
 import * as bcrypt from 'bcrypt';
-import { generateRandomPassword, sendRegistrationEmail, validateRegistrationData } from "../utils/authenticationUtils";
+import * as AuthUtils from "../utils/authenticationUtils";
+import { sendRegistrationEmail } from "../utils/sendEmailUtills";
 import { IUser } from "../models/userModel";
 import * as UserUtils from "../utils/userUtils";
 import * as Errors from "../constants/errorsConstants";
 import { Connection } from "mongoose";
 import jwt from 'jsonwebtoken';
 import * as dotenv from 'dotenv';
-import { LOGIN_SUCCESSFUL, TENANT_ADMIN_CREATED } from "../constants/sucessConstants";
+import * as SucessConstants from "../constants/sucessConstants";
 import { JWT } from "../constants/cookiesConstants";
 
 dotenv.config();
@@ -18,44 +19,43 @@ dotenv.config();
  * a user with a 'tenant-admin' role can create only users users with 'member' role.
  * @param req.body.sendEmail 
  * Boolean flag, if true send confirmation email with the user data and a temporary generated password to access the app.
- * @todo
- * send email for account confirmation
 */
 export const registerUser = async (req:Request, res:Response) => {
     const {name, lastname, email, sendEmail, tenant} = req.body;
     const dbConnection = res.locals.dataBaseConnection;
 
-    const errorsInInputData: string[] = validateRegistrationData(name, lastname, email, tenant);
+    const errorsInInputData: string[] = await AuthUtils.validateRegistrationData(name, lastname, email, dbConnection);
     if (errorsInInputData.length > 0) {
         return res.status(400).json({ errors: errorsInInputData });
     }
+
     const currentUser = await UserUtils.getUserByToken(req.cookies, dbConnection);
     if(currentUser == null){
         throw new Error(Errors.USER_NULL)
     }
-    const roleForNewUser: string = UserUtils.getRoleForNewUser(currentUser.role);
+    const tenantForNewUser = AuthUtils.getTenantForNewUser(currentUser, tenant);
+    const roleForNewUser: string = AuthUtils.getRoleForNewUser(currentUser.role);
     try{
-        const password = generateRandomPassword();
+        const password = AuthUtils.generateRandomPassword();
         const hashedPassword = await bcrypt.hash(password, 10);
         const user: IUser = await UserUtils.createNewUser(name, lastname, email, 
-            tenant, roleForNewUser, hashedPassword, dbConnection);
-        if(sendEmail) sendRegistrationEmail(user);
-        res.status(201).send(TENANT_ADMIN_CREATED);
+            tenantForNewUser, roleForNewUser, hashedPassword, dbConnection);
+        if(sendEmail){ 
+            sendRegistrationEmail(user, res, password);
+        }
+        res.status(201).send(SucessConstants.USER_CREATED);
     }catch(err){
         console.error(`${Errors.REGISTRATION_ERROR} \n ${err}`);
         res.status(500).send(Errors.REGISTRATION_ERROR);
     }
 }
 
-/**
- * @todo
- * after 4 failed attempt block the account. 
-*/
+
 export const login = async (req:Request, res:Response) => {
     const {email, password} = req.body;
     const dbConnection: Connection = res.locals.dataBaseConnection;
 
-    let user: IUser | null = await UserUtils.findUserByEmail(dbConnection, email);
+    let user: IUser | null = await UserUtils.getUserByEmail(dbConnection, email);
     if(user == null){
         return res.status(401).send(Errors.WRONG_CREDENTIALS_ERROR);
     }
@@ -65,11 +65,11 @@ export const login = async (req:Request, res:Response) => {
 
     try{
         //Compare the text plain password with the incrypted one stored in the database.
-        await bcrypt.compare(password, user.password).then((result) => {
+        await bcrypt.compare(password, user.password).then(async (result) => {
             if(!result){
-                UserUtils.increaseWrongAttemptsField(user);
+                await UserUtils.increaseWrongAttemptsField(user);
                 if(user.wrongAttempts > 3){
-                    UserUtils.blockAccountAndSendEmail(user, dbConnection);
+                    UserUtils.blockAccountAndSendEmail(user, dbConnection, res);
                     return res.status(401).send(Errors.ACCOUNT_HAS_BEEN_BLOCKED);
                 }
                 console.error(Errors.PASSWORD_NOT_MATCH);
@@ -77,13 +77,43 @@ export const login = async (req:Request, res:Response) => {
             }
             const accessToken = generateJwt(user);
             setJwtHttpOnlyCookie(accessToken, res);
-            res.status(201).send(LOGIN_SUCCESSFUL);
+            UserUtils.resetWrongAttemptsField(user);
+            res.status(201).send(createJsonForLocalStorage(user));
         })
     }catch(err){
         console.error(err);
         return res.status(500).send();
     }
 }
+
+const createJsonForLocalStorage = (user: IUser) : Object => {
+    const tokenExpirationDate: Date = new Date();
+    tokenExpirationDate.setDate(tokenExpirationDate.getDate() + 29); 
+    return {
+        "tokenExpirationDate": tokenExpirationDate,
+        "userRole": user.role,
+        "firstName": user.firstName,
+        "isAccountActive": user.isAccountActive
+    }
+}
+
+export const changePassword = async (req: Request, res: Response) => {
+    const {password} = req.body;
+    if(!AuthUtils.isPasswordSecure(password)){
+        return res.status(400).send(Errors.PASSWORD_NOT_SECURE);
+    }
+    const dbConnection = res.locals.dataBaseConnection;
+    const currentUser = await UserUtils.getUserByToken(req.cookies, dbConnection);
+    if(!currentUser){
+        console.error(Errors.USER_NULL);
+        return res.status(500).send(Errors.TOKEN_ERROR);
+    }
+    currentUser.password = await bcrypt.hash(password, 10);
+    currentUser.isAccountActive = true;
+    currentUser.save();
+    return res.status(200).send(SucessConstants.PASSWORD_CORRECTLY_CHANGED);
+}
+
 /**
  * @param accessToken
  * Token to put in the HttpOnly cookie.
@@ -92,10 +122,10 @@ export const login = async (req:Request, res:Response) => {
  */
 function setJwtHttpOnlyCookie(accessToken: string, res: Response) {
     res.cookie(JWT, accessToken, {
-        httpOnly: true, // Ensures the cookie is sent only over HTTP(S), not client-side JS
+        httpOnly: true,
         secure: process.env.NODE_ENV === 'production', // Ensures the cookie is sent only over HTTPS in production
-        sameSite: 'strict', // Controls whether a cookie is sent with cross-site requests; use 'lax' or 'strict'
-        maxAge: 30 * 24 * 60 * 60 * 1000,
+        sameSite: 'strict',
+        maxAge: 30 * 24 * 60 * 60 * 1000, //One month in milliseconds
     });
 }
 
@@ -111,16 +141,32 @@ function generateJwt(user: IUser): string{
         console.log(Errors.ENV_CONSTANT_ERROR);
         throw new Error(Errors.ENV_CONSTANT_ERROR);
     }
-    const accessToken = jwt.sign(user.toJSON(), tokenSecret, { expiresIn: '30d' });
+    const userPayload = {
+        "_id" : user.id,
+        "name" : user.firstName,
+        "lastName" : user.lastName,
+        "email" : user.email,
+        "tenant" : user.tenant
+    }
+    const accessToken = jwt.sign(userPayload, tokenSecret, { expiresIn: '30d' });
     return accessToken;
 }
 
 /**
  * @param req.body.email
- * Contains the email of the user that wants to restore his password.
- * @todo
+ * Contains the email of the user that wants to reset his password.
+ * @description
+ * Reset the password of the user and send it to the user by email, 
+ * during the first access he has to change his password.
 */
-export const restorePassword = (req:Request, res:Response) => {
+export const resetPassword = async (req:Request, res:Response) => {
     const {email} = req.body;
+    const dbConnection: Connection = res.locals.dataBaseConnection;
+    const user: IUser|null = await UserUtils.getUserByEmail(dbConnection, email);
+    if(!user){
+        res.status(201).send(SucessConstants.RESET_PASSWORD_SUCCESSFUL);
+        console.error(`Error in resetPassword function: ${Errors.USER_NULL} ${email}`);
+        return;
+    }
+    UserUtils.resetPasswordByEmail(user, dbConnection, res);
 }
-

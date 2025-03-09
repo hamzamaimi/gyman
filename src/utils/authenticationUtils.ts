@@ -1,5 +1,9 @@
 import { TENANTS_LIST } from "../constants/tenantConstants";
+import { getUserModels } from "./userUtils";
+import { QUERY_EXECUTION_ERROR, ROLE_NOT_FOUND } from "../constants/errorsConstants";
+import { Connection } from "mongoose";
 import { IUser } from "../models/userModel";
+import { APP_ADMIN_ROLE, MEMBER_ROLE, TENANT_ADMIN_ROLE } from "../constants/userConstants";
 const crypto = require('crypto');
 /**
  * @param length 
@@ -10,8 +14,29 @@ const crypto = require('crypto');
 export const generateRandomPassword = (length = 12) => {
     return crypto.randomBytes(length).toString('base64').slice(0, length);
 }
+/**
+ * @param password 
+ * The password to check
+ * @description
+ * A password to be secure should be at least 8 characters, one uppercase and one special character.
+ * @returns 
+ * A boolean that indicate if the password is secure or not.
+ */
+export const isPasswordSecure = (password: string): boolean => {
+    // Regular expression to check for at least one uppercase letter and one special character
+    const hasUppercase = /[A-Z]/;
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/;
+  
+    // Check if password meets all the conditions
+    return (
+      typeof(password) == 'string' &&
+      password.length >= 8 && // At least 8 characters
+      hasUppercase.test(password) && // Contains at least one uppercase letter
+      hasSpecialChar.test(password) // Contains at least one special character
+    );
+  } 
 
-export const validateRegistrationData = (name: string, lastname:string, email:string, tenant:string) => {
+export const validateRegistrationData = async (name: string, lastname: string, email: string, dbConnection: any) => {
     const errors: string[] = [];
 
     if(!isValidName(name)){
@@ -22,14 +47,9 @@ export const validateRegistrationData = (name: string, lastname:string, email:st
     }
     if(!isValidEmail(email)){
         errors.push('The email format is not valid.')
-    }else if(!isAvailableEmail(email)){
+    }else if(! await isAvailableEmail(email, dbConnection)){
         errors.push('The email is already taken.')
     }
-    
-    if(!isValidTenant(tenant)){
-        errors.push('Invalid tenant.');
-    }
-
     return errors;
 }
 
@@ -38,20 +58,64 @@ const isValidEmail = (email: string): boolean => /^[\w-.]+@([\w-]+\.)+[\w-]{2,4}
 const isValidName = (name: string): boolean => name.length >= 2; 
 
 const isValidLastName = (lastname: string): boolean => isValidName(lastname);
-
+//@todo check from database collection
 const isValidTenant = (tenant: string): boolean => TENANTS_LIST.includes(tenant);
 
-/**
- * @todo
- * TO IMPLEMENT!
- */
-const isAvailableEmail = (email:string): boolean => {
-    return true
+
+const isAvailableEmail = async (email: string, dbConnection: Connection): Promise<boolean> => {
+    const { appAdminModel, tenantAdminModel, memberModel } = getUserModels(dbConnection);
+    try {
+        const appAdmin = await appAdminModel.findOne({ email: email }).exec()
+        if(appAdmin){
+            return false;
+        }
+        
+        const tenantAdmin = await tenantAdminModel.findOne({ email: email }).exec()
+        if(tenantAdmin){
+            return false;
+        }
+        
+        const member = await memberModel.findOne({ email: email }).exec()
+        if(member){
+            return false;
+        }
+    
+    } catch (err) {
+        console.error(QUERY_EXECUTION_ERROR, err);
+        throw new Error(QUERY_EXECUTION_ERROR + " " + err);
+    }
+    return true;
 }
 
 /**
- * @todo
+ * @param currentUserRole 
+ * The role of the current user that wants to create a new user.
+ * @returns 
+ * Returns a user role, if the current user has the app-admin role he can create a tenant-admin role users.
+ * If the current user has tenant-admin role he can create member role users.
  */
-export const sendRegistrationEmail = (user: IUser) => {
-    
+export const getRoleForNewUser = (currentUserRole : string) : string => {
+    if(currentUserRole == APP_ADMIN_ROLE){
+        return TENANT_ADMIN_ROLE;
+    }
+    if(currentUserRole == TENANT_ADMIN_ROLE){
+        return MEMBER_ROLE;
+    }
+    throw new Error(ROLE_NOT_FOUND);
 }
+
+/**
+ * @param currentUser
+ * The current user that is creating a new user.
+ * @param tenant 
+ * The parameter received from the request.
+ * @returns 
+ * If the current user is an app-admin returns the tenant got from the request
+ * otherwise returns the current user tenant.
+ * @description
+ * The app-admin can create users for any tenant, The tenant admin can create users only for it's own tenant.
+ */
+export const getTenantForNewUser = (currentUser: IUser, tenant: string) => {
+    return (currentUser.role == APP_ADMIN_ROLE) ? tenant : currentUser.tenant; 
+}
+

@@ -6,14 +6,8 @@ import { ENV_CONSTANT_ERROR, TOKEN_ERROR, TOKEN_NOT_FOUND } from '../constants/e
 import { JWT } from '../constants/cookiesConstants';
 
 dotenv.config();
-/**
- * @todo
- * get the token from the cookies 
- */
-export const authenticateToken = (req: Request, res: Response, next: NextFunction) => {
-    // const authHeader = req.headers['authorization'];
-    // const token = authHeader && authHeader.split(' ')[1];
 
+export const authenticateToken = (req: Request, res: Response, next: NextFunction) => {
     const token = req.cookies[JWT];
     const accessTokenSecret = process.env.ACCESS_TOKEN_SECRET;
     

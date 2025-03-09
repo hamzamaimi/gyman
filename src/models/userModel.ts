@@ -1,6 +1,6 @@
 import mongoose, {Document, Model, Schema} from "mongoose";
 import {USER_ROLES, GENDERS} from '../constants/userConstants';
-import { TENANTS_LIST } from "../constants/tenantConstants";
+import {TENANTS_LIST} from "../constants/tenantConstants";
 
 export interface IUser extends Document{
     firstName: string;
@@ -11,9 +11,17 @@ export interface IUser extends Document{
     birthDay: Date;
     password: string;
     role: string;
+    //Rappresents the tenant of the user
     tenant: string;
+    //If true means that the user has been blocked cause of many wrong login attempts
     blocked: Boolean;
+    //Number of wrong attempts in row, after a successful login it will be reset to 0
     wrongAttempts: number;
+    //When is it false the user can only do the login
+    //In order to activate the account and use the whole app the user has to change the password.
+    isAccountActive: Boolean;
+    //The date time field that contains the last time the user requests a password reset
+    passwordResetRequestedAt: Date;
 }
 
 export interface UserDocument extends IUser, Document {}
@@ -67,6 +75,13 @@ export const UserSchema: Schema<IUser> = new Schema({
     wrongAttempts: {
         type: Number,
         default: 0
+    },
+    isAccountActive: {
+        type: Boolean,
+        default: false
+    },
+    passwordResetRequestedAt:{
+        type: Date
     }
 }, {timestamps: true});
 
