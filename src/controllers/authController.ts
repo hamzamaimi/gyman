@@ -97,12 +97,6 @@ const createJsonForLocalStorage = (user: IUser) : Object => {
     }
 }
 
-/**
- * @description
- * The user create a new password for it's account.
- * When the user change it's password, the isAccountActive user field become true.
- * The user should be logged in to change his password. 
- */
 export const changePassword = async (req: Request, res: Response) => {
     const {password} = req.body;
     if(!AuthUtils.isPasswordSecure(password)){
@@ -128,9 +122,9 @@ export const changePassword = async (req: Request, res: Response) => {
  */
 function setJwtHttpOnlyCookie(accessToken: string, res: Response) {
     res.cookie(JWT, accessToken, {
-        httpOnly: true, // Ensures the cookie is sent only over HTTP(S), not client-side JS
+        httpOnly: true,
         secure: process.env.NODE_ENV === 'production', // Ensures the cookie is sent only over HTTPS in production
-        sameSite: 'strict', // Controls whether a cookie is sent with cross-site requests; use 'lax' or 'strict'
+        sameSite: 'strict',
         maxAge: 30 * 24 * 60 * 60 * 1000, //One month in milliseconds
     });
 }
