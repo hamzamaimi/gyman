@@ -2,7 +2,7 @@
 - Install Dependencies:
     npm install
 - Create .env File, Add a .env file in the root directory with:
-    MONGO_URI=mongodb://localhost:27017/gym_management
+    MONGO_URI=mongodb://localhost:27017
     PORT=8080
 - Compile TypeScript:
     npm run build
