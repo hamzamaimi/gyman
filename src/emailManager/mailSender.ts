@@ -12,17 +12,25 @@ const appName: string = process.env.APP_NAME || '';
 let sentFrom: Sender;
 let emailRecipients: Recipient[];
 
-export const sendEmail = (tenantName: string, recipients: Recipient[], bccRecipients: Recipient[], subject: string, 
+export const sendEmail = async (tenantName: string, recipients: Recipient[], bccRecipients: Recipient[], subject: string,
     htmlContent: string) => {
     sentFrom = new Sender(domainEmail, `${appName}_${tenantName}`);
     emailRecipients = recipients;
-    mailSend.email.send(emailParams(sentFrom, recipients, bccRecipients, subject, htmlContent));
+    try {
+        await mailSend.email.send(emailParams(sentFrom, recipients, bccRecipients, subject, htmlContent));
+    } catch (error) {
+        console.error("Tenant:", tenantName,
+            "\nMail sent to:", recipients.map(r => r.email).join(', '),
+            "\nError sending email:", error
+        );
+
+    }
 }
 
-const emailParams = (sentFrom: Sender, recipients: Recipient[], bccRecipients: Recipient[], 
+const emailParams = (sentFrom: Sender, recipients: Recipient[], bccRecipients: Recipient[],
     subject: string, htmlContent: string) => new EmailParams()
-  .setFrom(sentFrom)
-  .setTo(recipients)
-  .setBcc(bccRecipients)
-  .setSubject(subject)
-  .setHtml(htmlContent);
+        .setFrom(sentFrom)
+        .setTo(recipients)
+        .setBcc(bccRecipients)
+        .setSubject(subject)
+        .setHtml(htmlContent);
