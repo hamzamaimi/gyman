@@ -1,5 +1,6 @@
 # Gyman - Setup Guide
 
+## How to run the server
 1. Install the dependecies by using the command `npm install`
 
 2. Compile the project `num run build`
@@ -16,3 +17,16 @@
   ADMIN_EMAIL=AdminEmail@email.com
 
 6. Start the server `npm run dev`
+
+
+## How to send Emails
+This project send emails by smtp. In order to send the email you have to follow these steps
+1. Add these variables to your .env file:
+  ```env
+    GOOGLE_MAIL_HOST=smtp.gmail.com
+    GOOGLE_MAIL_PORT=465
+    GOOGLE_MAIL_SECURE=true
+    GOOGLE_MAIL_USER=yourEmail@gmail.com
+    GOOGLE_MAIL_PASSWORD=yourPassword
+  ```
+NB: In order to be able to send emaild by your personal gmail you have to enable double factor authentication and then create a new 'app password' to use in the variable above.
